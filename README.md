@@ -15,13 +15,13 @@ This repository contains a Node.js script that scrapes product data from Noon.co
 1. **Clone the Repository**
 
     ```
-    git clone https://github.com/your-username/noon-web-scraper.git
+    git clone https://github.com/smhz101/noonScraper.git
     ```
 
 2. **Navigate to the Directory**
 
     ```
-    cd noon-web-scraper
+    cd noonScraper
     ```
 
 3. **Install Dependencies**
