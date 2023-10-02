@@ -13,8 +13,9 @@ This repository contains a Node.js script that scrapes product data from Noon.co
 ## Installation
 
 1. **Clone the Repository**
-```bash
-git clone https://github.com/your-username/noon-web-scraper.git
+
+    ```
+    git clone https://github.com/your-username/noon-web-scraper.git
     ```
 
 2. **Navigate to the Directory**
