@@ -48,6 +48,10 @@ node scrap.js --page=1
 
 This will start the scraping process, and the data will be saved in a file named `scraped_data.csv`.
 
+## Screenshot
+
+![Screenshot](https://www.tutorialsbucket.com/wp-content/uploads/2023/10/Screenshot-at-Oct-02-16-11-48.png)
+
 ## Dependencies
 
 - [axios](https://github.com/axios/axios) for HTTP requests
