@@ -20,13 +20,13 @@ This repository contains a Node.js script that scrapes product data from Noon.co
 
 2. **Navigate to the Directory**
 
-    ```bash
+    ```
     cd noon-web-scraper
     ```
 
 3. **Install Dependencies**
 
-    ```bash
+    ```
     npm install
     ```
 
@@ -34,8 +34,16 @@ This repository contains a Node.js script that scrapes product data from Noon.co
 
 To run the scraper, execute the following command:
 
-```bash
+```
 node scrap.js
+```
+
+OR 
+
+If you want to extract the contents of only 1 page
+
+```
+node scrap.js --page=1
 ```
 
 This will start the scraping process, and the data will be saved in a file named `scraped_data.csv`.
