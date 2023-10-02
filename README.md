@@ -55,7 +55,7 @@ This will start the scraping process, and the data will be saved in a file named
 ## Dependencies
 
 - [axios](https://github.com/axios/axios) for HTTP requests
-- [cheerio](https://github.com/cheeriojs/cheerio) for HTML parsing
+- [puppeteer](https://www.npmjs.com/package/puppeteer) for page Browsing
 - [csv-writer](https://github.com/ryu1kn/csv-writer) for writing to CSV files
 
 ## Disclaimer
