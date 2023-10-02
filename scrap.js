@@ -45,7 +45,6 @@ async function scrapeData(pageNumber) {
   try {
     const response = await axios.get(pageUrl);
     const $ = cheerio.load(response.data);
-    console.log("Response Status:", response.status);
 
     $(".wrapper.productContainer").each((index, element) => {
       let title = $(element).find("[data-qa='product-name']").attr("title");
@@ -61,8 +60,6 @@ async function scrapeData(pageNumber) {
         currency,
         amount,
       });
-
-      console.log(records);
     });
 
     console.log("Number of Records:", records.length);
