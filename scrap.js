@@ -1,12 +1,13 @@
 const axios = require("axios");
-const cheerio = require("cheerio");
+const puppeteer = require("puppeteer");
 const createCsvWriter = require("csv-writer").createObjectCsvWriter;
 const fs = require("fs");
 const querystring = require("querystring");
 
 // Extract search query from URL
 const url =
-  "https://www.noon.com/apple/?limit=50&originalQuery=iphone%2011&page=1&q=iphone%2011&searchDebug=false&sort%5Bby%5D=price&sort%5Bdir%5D=asc";
+  "https://www.noon.com/apple/?limit=50&originalQuery=iphone%2011&q=iphone%2011&page=1&searchDebug=false&sort%5Bby%5D=price&sort%5Bdir%5D=asc&gclid=CjwKCAjwsKqoBhBPEiwALrrqiGWQbOrD-u2wduTRRxhIsdYxPb8b0-9WlfBr92WaXMukIlPvaDB-LRoCz2wQAvD_BwE&utm_campaign=C1000035425N_ae_en_web_on_go_s_ex_cb_nbr_c1000088l_&utm_medium=cpc&utm_source=c1000088L";
+
 const originalQuery = querystring
   .parse(url.split("?")[1])
   .originalQuery.replace(/%20/g, "-");
@@ -34,49 +35,67 @@ const csvWriter = createCsvWriter({
 const pageArg = process.argv.find((arg) => arg.startsWith("--page="));
 const specificPage = pageArg ? parseInt(pageArg.split("=")[1], 10) : null;
 
-async function scrapeData(pageNumber) {
-  const pageUrl = `${url.split("&page=")[0]}&page=${pageNumber}${url
-    .split("&page=")[1]
-    .split("&")
-    .slice(1)
-    .join("&")}`;
-  const records = [];
-
+const scrapeData = async (page, pageNumber) => {
   try {
-    const response = await axios.get(pageUrl);
-    const $ = cheerio.load(response.data);
+    const pageUrl = `${url.split("&page=")[0]}&page=${pageNumber}${url
+      .split("&page=")[1]
+      .split("&")
+      .slice(1)
+      .join("&")}`;
 
-    $(".wrapper.productContainer").each((index, element) => {
-      let title = $(element).find("[data-qa='product-name']").attr("title");
-      let currency = $(element).find(".currency").text();
-      let amount = $(element).find(".amount").text();
+    console.log("Page: ", pageUrl);
 
-      title = title.trim().replace(/[^a-zA-Z0-9 ]|"/g, "");
-      currency = currency.trim();
-      amount = parseFloat(amount.trim().replace(/[^0-9.]/g, ""));
+    await page.setUserAgent(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537"
+    );
+    await page.goto(pageUrl, { waitUntil: "networkidle0", timeout: 0 });
 
-      records.push({
-        title,
-        currency,
-        amount,
-      });
+    // Check if "We couldn’t find what you were looking for" exists
+    const isEndOfData = await page.$(
+      '[alt="We couldn’t find what you were looking for"]'
+    );
+    if (isEndOfData) {
+      console.log("No more data to scrape, stopping.");
+      return;
+    }
+
+    const records = await page.evaluate(() => {
+      const records = [];
+      document
+        .querySelectorAll(".wrapper.productContainer")
+        .forEach((element) => {
+          const title = element
+            .querySelector('[data-qa="product-name"]')
+            .getAttribute("title");
+          const currency = element.querySelector(".currency").innerText;
+          const amount = element.querySelector(".amount").innerText;
+
+          records.push({
+            title: title.replace(/[^a-zA-Z0-9 ]|"/g, "").trim(),
+            currency: currency.trim(),
+            amount: parseFloat(amount.replace(/[^0-9.]/g, "").trim()),
+          });
+        });
+      return records;
     });
 
-    console.log("Number of Records:", records.length);
+    console.log(`Page ${pageNumber} is scraped`);
 
     // Append records to CSV
     await csvWriter.writeRecords(records);
-    console.log(`Page ${pageNumber} is scraped`);
 
-    // Handle pagination
-    const nextBtn = $(".next a.arrowLink");
-    if (nextBtn.attr("aria-disabled") !== "true" && !specificPage) {
-      scrapeData(pageNumber + 1);
-    }
+    // Go to the next page
+    await scrapeData(page, pageNumber + 1);
   } catch (error) {
-    console.error(`Error: ${error}`);
+    console.error(`Error in scrapeData: ${error}`);
   }
-}
+};
 
-// Start scraping from specified page or page 1
-scrapeData(specificPage || 1);
+(async () => {
+  const browser = await puppeteer.launch({ headless: true });
+  const page = await browser.newPage();
+
+  await scrapeData(page, 1);
+
+  await browser.close();
+})();
